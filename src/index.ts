@@ -130,12 +130,65 @@ async function handleMockRequest(
   
   const data = mockData.data;
   const method = request.method;
+  const url = new URL(request.url);
+  const baseUrl = `${url.protocol}//${url.host}/m/${mockId}`;
   
-  // Single object: GET /
-  if (!Array.isArray(data) && typeof data === 'object' && !isCollectionObject(data)) {
-    if (path === '' && method === 'GET') {
+  // Discovery endpoint: GET /m/:id (bare root)
+  if (path === '' && method === 'GET') {
+    // Single object: return the object directly
+    if (!Array.isArray(data) && typeof data === 'object' && !isCollectionObject(data)) {
       return jsonResponse(data);
     }
+    
+    // Array shape: return discovery info
+    if (Array.isArray(data)) {
+      const itemCount = data.length;
+      const sampleItem = itemCount > 0 ? data[0] : null;
+      return jsonResponse({
+        id: mockId,
+        expiresAt: new Date(mockData.createdAt + TTL_MS).toISOString(),
+        shape: 'array',
+        itemCount,
+        routes: {
+          listItems: `GET ${baseUrl}/items`,
+          createItem: `POST ${baseUrl}/items`,
+          getItem: `GET ${baseUrl}/items/:id`,
+          updateItem: `PATCH ${baseUrl}/items/:id`,
+          deleteItem: `DELETE ${baseUrl}/items/:id`,
+        },
+        ...(sampleItem && { sampleItem }),
+      });
+    }
+    
+    // Collection object: return discovery info
+    if (isCollectionObject(data)) {
+      const collections = Object.keys(data).filter(key => Array.isArray(data[key]));
+      const collectionInfo: Record<string, any> = {};
+      collections.forEach(name => {
+        const items = data[name];
+        collectionInfo[name] = {
+          itemCount: items.length,
+          routes: {
+            list: `GET ${baseUrl}/${name}`,
+            create: `POST ${baseUrl}/${name}`,
+            get: `GET ${baseUrl}/${name}/:id`,
+            update: `PATCH ${baseUrl}/${name}/:id`,
+            delete: `DELETE ${baseUrl}/${name}/:id`,
+          },
+        };
+      });
+      
+      return jsonResponse({
+        id: mockId,
+        expiresAt: new Date(mockData.createdAt + TTL_MS).toISOString(),
+        shape: 'collection',
+        collections: collectionInfo,
+      });
+    }
+  }
+  
+  // Single object: only GET / is valid
+  if (!Array.isArray(data) && typeof data === 'object' && !isCollectionObject(data)) {
     return jsonResponse({ error: 'Not found' }, 404);
   }
   
