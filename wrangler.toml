@@ -20,6 +20,6 @@ compatibility_date = "2024-09-09"
 # For local development, this simulated KV binding is used:
 [[kv_namespaces]]
 binding = "MOCKS"
-id = "00000000000000000000000000000000"  # Placeholder for local dev simulation
+id = "eb911762824d440da40742de3c1b9c2f"  # Placeholder for local dev simulation
 
 
