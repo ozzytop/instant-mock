@@ -176,8 +176,11 @@ async function handleArrayRoutes(
   if (path === 'items' && method === 'POST') {
     try {
       const newItem = await request.json() as any;
-      const newId = data.length > 0 ? Math.max(...data.map((i: any) => Number(i.id) || 0)) + 1 : 1;
-      const itemWithId = { ...newItem, id: newId };
+      let itemWithId = newItem;
+      if (!newItem.id) {
+        const newId = data.length > 0 ? Math.max(...data.map((i: any) => Number(i.id) || 0)) + 1 : 1;
+        itemWithId = { ...newItem, id: newId };
+      }
       const updatedData = [...data, itemWithId];
       await updateMockData(env, mockId, updatedData);
       return jsonResponse(itemWithId, 201);
@@ -254,8 +257,11 @@ async function handleCollectionRoutes(
   if (segments.length === 1 && method === 'POST') {
     try {
       const newItem = await request.json() as any;
-      const newId = collection.length > 0 ? Math.max(...collection.map((i: any) => Number(i.id) || 0)) + 1 : 1;
-      const itemWithId = { ...newItem, id: newId };
+      let itemWithId = newItem;
+      if (!newItem.id) {
+        const newId = collection.length > 0 ? Math.max(...collection.map((i: any) => Number(i.id) || 0)) + 1 : 1;
+        itemWithId = { ...newItem, id: newId };
+      }
       const updatedCollection = [...collection, itemWithId];
       const updatedData = { ...data, [collectionName]: updatedCollection };
       await updateMockData(env, mockId, updatedData);
