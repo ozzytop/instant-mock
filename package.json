@@ -1,0 +1,19 @@
+{
+  "name": "instant-mock",
+  "version": "0.1.0",
+  "description": "Instant mock API - paste JSON, get a live URL",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc"
+  },
+  "keywords": ["mock", "api", "testing"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "typescript": "^5.6.2",
+    "wrangler": "^3.78.2"
+  }
+}
