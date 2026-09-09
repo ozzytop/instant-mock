@@ -483,6 +483,59 @@ const HTML_PAGE = `<!DOCTYPE html>
       font-size: 0.9rem;
       color: #555;
     }
+    .endpoints {
+      margin-top: 15px;
+    }
+    .endpoint-group {
+      margin-bottom: 20px;
+    }
+    .endpoint-group h4 {
+      color: #444;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .endpoint-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .endpoint-line:hover {
+      background: #f8f9fa;
+    }
+    .endpoint-method {
+      font-weight: bold;
+      min-width: 55px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+    .method-GET { color: #28a745; background: #d4edda; }
+    .method-POST { color: #007bff; background: #cfe2ff; }
+    .method-PATCH { color: #ffc107; background: #fff3cd; }
+    .method-DELETE { color: #dc3545; background: #f8d7da; }
+    .endpoint-url {
+      flex: 1;
+      color: #495057;
+      word-break: break-all;
+    }
+    .endpoint-copy-icon {
+      font-size: 1rem;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+    .endpoint-line:hover .endpoint-copy-icon {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -547,6 +600,93 @@ const HTML_PAGE = `<!DOCTYPE html>
       document.getElementById('jsonInput').value = JSON.stringify(examples[type], null, 2);
     }
 
+    function isCollectionObject(data) {
+      if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+        return false;
+      }
+      return Object.values(data).some(val => Array.isArray(val));
+    }
+
+    function getExampleId(items) {
+      if (!items || items.length === 0) return '1';
+      const firstItem = items[0];
+      return firstItem.id !== undefined ? firstItem.id : '1';
+    }
+
+    function generateEndpointsHTML(json, baseUrl) {
+      let html = '<div class="endpoints">';
+      
+      // Single object
+      if (!Array.isArray(json) && typeof json === 'object' && !isCollectionObject(json)) {
+        html += '<div class="endpoint-group">';
+        html += '<h4>Single Object</h4>';
+        html += createEndpointLine('GET', baseUrl);
+        html += '</div>';
+        return html + '</div>';
+      }
+      
+      // Array shape
+      if (Array.isArray(json)) {
+        const exampleId = getExampleId(json);
+        html += '<div class="endpoint-group">';
+        html += '<h4>Items Collection</h4>';
+        html += createEndpointLine('GET', \`\${baseUrl}/items\`, 'List all items');
+        html += createEndpointLine('POST', \`\${baseUrl}/items\`, 'Create new item');
+        html += createEndpointLine('GET', \`\${baseUrl}/items/\${exampleId}\`, 'Get item by ID');
+        html += createEndpointLine('PATCH', \`\${baseUrl}/items/\${exampleId}\`, 'Update item');
+        html += createEndpointLine('DELETE', \`\${baseUrl}/items/\${exampleId}\`, 'Delete item');
+        html += '</div>';
+        return html + '</div>';
+      }
+      
+      // Collection object
+      if (isCollectionObject(json)) {
+        const collections = Object.keys(json).filter(key => Array.isArray(json[key]));
+        collections.forEach(name => {
+          const items = json[name];
+          const exampleId = getExampleId(items);
+          html += '<div class="endpoint-group">';
+          html += \`<h4>\${name.charAt(0).toUpperCase() + name.slice(1)}</h4>\`;
+          html += createEndpointLine('GET', \`\${baseUrl}/\${name}\`, 'List all');
+          html += createEndpointLine('POST', \`\${baseUrl}/\${name}\`, 'Create new');
+          html += createEndpointLine('GET', \`\${baseUrl}/\${name}/\${exampleId}\`, 'Get by ID');
+          html += createEndpointLine('PATCH', \`\${baseUrl}/\${name}/\${exampleId}\`, 'Update');
+          html += createEndpointLine('DELETE', \`\${baseUrl}/\${name}/\${exampleId}\`, 'Delete');
+          html += '</div>';
+        });
+        return html + '</div>';
+      }
+      
+      return html + '</div>';
+    }
+
+    function createEndpointLine(method, url, description) {
+      const id = 'endpoint_' + Math.random().toString(36).substr(2, 9);
+      return \`
+        <div class="endpoint-line" onclick="copyEndpoint('\${url}', '\${id}')">
+          <span class="endpoint-method method-\${method}">\${method}</span>
+          <span class="endpoint-url">\${url}</span>
+          <span class="endpoint-copy-icon" id="\${id}">📋</span>
+        </div>
+      \`;
+    }
+
+    function copyEndpoint(url, iconId) {
+      const icon = document.getElementById(iconId);
+      navigator.clipboard.writeText(url).then(() => {
+        icon.textContent = '✓';
+        setTimeout(() => {
+          icon.textContent = '📋';
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        icon.textContent = '✗';
+        setTimeout(() => {
+          icon.textContent = '📋';
+        }, 2000);
+      });
+    }
+
     document.getElementById('createBtn').addEventListener('click', async () => {
       const btn = document.getElementById('createBtn');
       const resultDiv = document.getElementById('result');
@@ -571,6 +711,8 @@ const HTML_PAGE = `<!DOCTYPE html>
           throw new Error(data.error || 'Failed to create mock');
         }
         
+        const endpointsHTML = generateEndpointsHTML(json, data.url);
+        
         resultDiv.innerHTML = \`
           <strong>✅ Mock API created!</strong>
           <div class="url-box">\${data.url}</div>
@@ -578,12 +720,10 @@ const HTML_PAGE = `<!DOCTYPE html>
           <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
             Expires: \${new Date(data.expiresAt).toLocaleString()}
           </p>
-          <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">
-            <strong>Routes available:</strong><br>
-            Collection: GET/POST /collection, GET/PATCH/DELETE /collection/:id<br>
-            Array: GET/POST /items, GET/PATCH/DELETE /items/:id<br>
-            Single: GET /
-          </p>
+          <div style="margin-top: 15px;">
+            <strong style="color: #444; font-size: 0.95rem;">📡 Available Endpoints:</strong>
+            \${endpointsHTML}
+          </div>
         \`;
         resultDiv.classList.add('show', 'success');
         
