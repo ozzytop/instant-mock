@@ -31,7 +31,7 @@ An instant mock API service for frontend developers who need a fake backend in ~
 
 ### Deploy to Cloudflare Workers
 
-1. **Install Wrangler CLI:**
+1. **Install Wrangler CLI (if not already installed):**
    ```bash
    npm install -g wrangler
    ```
@@ -46,17 +46,36 @@ An instant mock API service for frontend developers who need a fake backend in ~
    wrangler kv:namespace create MOCKS
    ```
    
-   Copy the generated `id` and update `wrangler.toml`:
-   ```toml
-   [[kv_namespaces]]
-   binding = "MOCKS"
-   id = "your-generated-id-here"
+   This will output something like:
+   ```
+   { binding = "MOCKS", id = "1234567890abcdef1234567890abcdef" }
    ```
 
-4. **Deploy:**
+4. **Update wrangler.toml:**
+   
+   Open `wrangler.toml` and replace the placeholder KV namespace configuration (the commented-out section) with the real id:
+   
+   ```toml
+   # Uncomment and use this for production:
+   [[kv_namespaces]]
+   binding = "MOCKS"
+   id = "1234567890abcdef1234567890abcdef"  # Use your actual id from step 3
+   ```
+   
+   Then comment out or remove the local dev placeholder binding:
+   ```toml
+   # Comment out for production:
+   # [[kv_namespaces]]
+   # binding = "MOCKS"
+   # id = "00000000000000000000000000000000"
+   ```
+
+5. **Deploy:**
    ```bash
    npm run deploy
    ```
+   
+   Your app will be live at `https://instant-mock.<your-subdomain>.workers.dev`
 
 ## How It Works
 
@@ -144,10 +163,18 @@ curl https://your-domain/m/abc123def456/users
 # Get specific user
 curl https://your-domain/m/abc123def456/users/1
 
-# Create user
+# Create user (persisted until TTL)
 curl -X POST https://your-domain/m/abc123def456/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Bob","email":"bob@example.com"}'
+
+# Update user (persisted until TTL)
+curl -X PATCH https://your-domain/m/abc123def456/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice.new@example.com"}'
+
+# Delete user (persisted until TTL)
+curl -X DELETE https://your-domain/m/abc123def456/users/1
 ```
 
 ## Limitations
@@ -157,7 +184,7 @@ curl -X POST https://your-domain/m/abc123def456/users \
 - **Records**: Max ~1,000 records per mock
 - **Storage**: URL is the only key - lose it, it's gone
 - **No Auth**: Anyone with the URL can access the mock
-- **Read-Only Storage**: POST/PATCH/DELETE return success but don't persist changes
+- **ID Support**: Both string and number IDs are supported for lookups
 
 ## Tech Stack
 
@@ -174,8 +201,8 @@ This is an MVP focused on the 10-second path. Not included:
 - GraphQL support
 - Faker/generated data
 - Teams/collaboration
-- Persistent storage
 - Custom domains
+- Persistence beyond 24h TTL
 
 ## License
 

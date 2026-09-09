@@ -2,12 +2,24 @@ name = "instant-mock"
 main = "src/index.ts"
 compatibility_date = "2024-09-09"
 
+# For local development with `wrangler dev`
+# The KV namespace will be automatically simulated locally (no id needed for dev)
+
+# To deploy to Cloudflare Workers:
+# 1. Login: wrangler login
+# 2. Create production KV namespace:
+#    wrangler kv:namespace create MOCKS
+# 3. Uncomment the kv_namespaces block below and add the generated id
+# 4. Deploy: wrangler deploy
+
+# Uncomment this section and add your KV namespace id to deploy:
+# [[kv_namespaces]]
+# binding = "MOCKS"
+# id = "your-namespace-id-here"  # Get this from: wrangler kv:namespace create MOCKS
+
+# For local development, this simulated KV binding is used:
 [[kv_namespaces]]
 binding = "MOCKS"
-id = "placeholder_will_be_generated_on_deploy"
-preview_id = "placeholder_for_local_dev"
+id = "00000000000000000000000000000000"  # Placeholder for local dev simulation
 
-[env.production]
-kv_namespaces = [
-  { binding = "MOCKS", id = "placeholder_will_be_generated_on_deploy" }
-]
+

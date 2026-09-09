@@ -60,6 +60,25 @@ async function getMockData(env: Env, mockId: string): Promise<MockData | null> {
   return mockData;
 }
 
+async function updateMockData(env: Env, mockId: string, newData: any): Promise<void> {
+  const mockData = await getMockData(env, mockId);
+  if (!mockData) return;
+  
+  const updatedMockData: MockData = {
+    data: newData,
+    createdAt: mockData.createdAt,
+  };
+  
+  const remainingTtl = Math.max(0, Math.floor((TTL_MS - (Date.now() - mockData.createdAt)) / 1000));
+  await env.MOCKS.put(`mock:${mockId}`, JSON.stringify(updatedMockData), {
+    expirationTtl: remainingTtl,
+  });
+}
+
+function matchId(itemId: any, pathId: string): boolean {
+  return String(itemId) === pathId || Number(itemId) === Number(pathId);
+}
+
 async function handleCreateMock(request: Request, env: Env): Promise<Response> {
   try {
     const body = await request.json() as any;
@@ -122,12 +141,12 @@ async function handleMockRequest(
   
   // Raw array: /items
   if (Array.isArray(data)) {
-    return handleArrayRoutes(data, path, method, request);
+    return handleArrayRoutes(env, mockId, data, path, method, request);
   }
   
   // Collection object (object of arrays)
   if (isCollectionObject(data)) {
-    return handleCollectionRoutes(data, path, method, request);
+    return handleCollectionRoutes(env, mockId, data, path, method, request);
   }
   
   return jsonResponse({ error: 'Unsupported data structure' }, 400);
@@ -141,6 +160,8 @@ function isCollectionObject(data: any): boolean {
 }
 
 async function handleArrayRoutes(
+  env: Env,
+  mockId: string,
   data: any[],
   path: string,
   method: string,
@@ -155,30 +176,37 @@ async function handleArrayRoutes(
   if (path === 'items' && method === 'POST') {
     try {
       const newItem = await request.json() as any;
-      const newId = data.length > 0 ? Math.max(...data.map((i: any) => i.id || 0)) + 1 : 1;
-      return jsonResponse({ ...newItem, id: newId }, 201);
+      const newId = data.length > 0 ? Math.max(...data.map((i: any) => Number(i.id) || 0)) + 1 : 1;
+      const itemWithId = { ...newItem, id: newId };
+      const updatedData = [...data, itemWithId];
+      await updateMockData(env, mockId, updatedData);
+      return jsonResponse(itemWithId, 201);
     } catch {
       return jsonResponse({ error: 'Invalid JSON' }, 400);
     }
   }
   
   // GET /items/:id
-  const itemMatch = path.match(/^items\/(\d+)$/);
+  const itemMatch = path.match(/^items\/(.+)$/);
   if (itemMatch && method === 'GET') {
-    const id = parseInt(itemMatch[1]);
-    const item = data.find((i: any) => i.id === id);
+    const pathId = itemMatch[1];
+    const item = data.find((i: any) => matchId(i.id, pathId));
     if (item) return jsonResponse(item);
     return jsonResponse({ error: 'Item not found' }, 404);
   }
   
   // PATCH /items/:id
   if (itemMatch && method === 'PATCH') {
-    const id = parseInt(itemMatch[1]);
-    const item = data.find((i: any) => i.id === id);
-    if (!item) return jsonResponse({ error: 'Item not found' }, 404);
+    const pathId = itemMatch[1];
+    const itemIndex = data.findIndex((i: any) => matchId(i.id, pathId));
+    if (itemIndex === -1) return jsonResponse({ error: 'Item not found' }, 404);
     try {
       const updates = await request.json() as any;
-      return jsonResponse({ ...item, ...updates });
+      const updatedItem = { ...data[itemIndex], ...updates };
+      const updatedData = [...data];
+      updatedData[itemIndex] = updatedItem;
+      await updateMockData(env, mockId, updatedData);
+      return jsonResponse(updatedItem);
     } catch {
       return jsonResponse({ error: 'Invalid JSON' }, 400);
     }
@@ -186,9 +214,11 @@ async function handleArrayRoutes(
   
   // DELETE /items/:id
   if (itemMatch && method === 'DELETE') {
-    const id = parseInt(itemMatch[1]);
-    const item = data.find((i: any) => i.id === id);
-    if (!item) return jsonResponse({ error: 'Item not found' }, 404);
+    const pathId = itemMatch[1];
+    const itemIndex = data.findIndex((i: any) => matchId(i.id, pathId));
+    if (itemIndex === -1) return jsonResponse({ error: 'Item not found' }, 404);
+    const updatedData = data.filter((_, idx) => idx !== itemIndex);
+    await updateMockData(env, mockId, updatedData);
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
   
@@ -196,6 +226,8 @@ async function handleArrayRoutes(
 }
 
 async function handleCollectionRoutes(
+  env: Env,
+  mockId: string,
   data: Record<string, any>,
   path: string,
   method: string,
@@ -222,8 +254,12 @@ async function handleCollectionRoutes(
   if (segments.length === 1 && method === 'POST') {
     try {
       const newItem = await request.json() as any;
-      const newId = collection.length > 0 ? Math.max(...collection.map((i: any) => i.id || 0)) + 1 : 1;
-      return jsonResponse({ ...newItem, id: newId }, 201);
+      const newId = collection.length > 0 ? Math.max(...collection.map((i: any) => Number(i.id) || 0)) + 1 : 1;
+      const itemWithId = { ...newItem, id: newId };
+      const updatedCollection = [...collection, itemWithId];
+      const updatedData = { ...data, [collectionName]: updatedCollection };
+      await updateMockData(env, mockId, updatedData);
+      return jsonResponse(itemWithId, 201);
     } catch {
       return jsonResponse({ error: 'Invalid JSON' }, 400);
     }
@@ -231,20 +267,25 @@ async function handleCollectionRoutes(
   
   // GET /collection/:id
   if (segments.length === 2 && method === 'GET') {
-    const id = parseInt(segments[1]);
-    const item = collection.find((i: any) => i.id === id);
+    const pathId = segments[1];
+    const item = collection.find((i: any) => matchId(i.id, pathId));
     if (item) return jsonResponse(item);
     return jsonResponse({ error: 'Item not found' }, 404);
   }
   
   // PATCH /collection/:id
   if (segments.length === 2 && method === 'PATCH') {
-    const id = parseInt(segments[1]);
-    const item = collection.find((i: any) => i.id === id);
-    if (!item) return jsonResponse({ error: 'Item not found' }, 404);
+    const pathId = segments[1];
+    const itemIndex = collection.findIndex((i: any) => matchId(i.id, pathId));
+    if (itemIndex === -1) return jsonResponse({ error: 'Item not found' }, 404);
     try {
       const updates = await request.json() as any;
-      return jsonResponse({ ...item, ...updates });
+      const updatedItem = { ...collection[itemIndex], ...updates };
+      const updatedCollection = [...collection];
+      updatedCollection[itemIndex] = updatedItem;
+      const updatedData = { ...data, [collectionName]: updatedCollection };
+      await updateMockData(env, mockId, updatedData);
+      return jsonResponse(updatedItem);
     } catch {
       return jsonResponse({ error: 'Invalid JSON' }, 400);
     }
@@ -252,9 +293,12 @@ async function handleCollectionRoutes(
   
   // DELETE /collection/:id
   if (segments.length === 2 && method === 'DELETE') {
-    const id = parseInt(segments[1]);
-    const item = collection.find((i: any) => i.id === id);
-    if (!item) return jsonResponse({ error: 'Item not found' }, 404);
+    const pathId = segments[1];
+    const itemIndex = collection.findIndex((i: any) => matchId(i.id, pathId));
+    if (itemIndex === -1) return jsonResponse({ error: 'Item not found' }, 404);
+    const updatedCollection = collection.filter((_, idx) => idx !== itemIndex);
+    const updatedData = { ...data, [collectionName]: updatedCollection };
+    await updateMockData(env, mockId, updatedData);
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
   
@@ -471,7 +515,7 @@ const HTML_PAGE = `<!DOCTYPE html>
         resultDiv.innerHTML = \`
           <strong>✅ Mock API created!</strong>
           <div class="url-box">\${data.url}</div>
-          <button class="copy-btn" onclick="copyUrl('\${data.url}')">Copy URL</button>
+          <button id="copyUrlBtn" class="copy-btn" onclick="copyUrl('\${data.url}', 'copyUrlBtn')">Copy URL</button>
           <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
             Expires: \${new Date(data.expiresAt).toLocaleString()}
           </p>
@@ -484,7 +528,7 @@ const HTML_PAGE = `<!DOCTYPE html>
         \`;
         resultDiv.classList.add('show', 'success');
         
-        copyUrl(data.url);
+        copyUrl(data.url, 'copyUrlBtn');
         
       } catch (error) {
         resultDiv.innerHTML = \`<strong>❌ Error:</strong> \${error.message}\`;
@@ -495,11 +539,31 @@ const HTML_PAGE = `<!DOCTYPE html>
       }
     });
 
-    function copyUrl(url) {
+    function copyUrl(url, buttonId) {
+      const btn = buttonId ? document.getElementById(buttonId) : null;
       navigator.clipboard.writeText(url).then(() => {
-        console.log('URL copied to clipboard');
+        if (btn) {
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          btn.style.background = '#28a745';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+          }, 2000);
+        }
       }).catch(err => {
         console.error('Failed to copy:', err);
+        if (btn) {
+          const originalText = btn.textContent;
+          btn.textContent = '✗ Copy failed - select URL manually';
+          btn.style.background = '#dc3545';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+          }, 3000);
+        } else {
+          alert('Failed to copy URL to clipboard. Please select and copy manually.');
+        }
       });
     }
   </script>
