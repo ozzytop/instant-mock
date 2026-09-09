@@ -77,6 +77,31 @@ An instant mock API service for frontend developers who need a fake backend in ~
    
    Your app will be live at `https://instant-mock.<your-subdomain>.workers.dev`
 
+### Automated Deployment (CI/CD)
+
+For automatic deployments on every push to `main`, use GitHub Actions:
+
+1. **Create Cloudflare API Token:**
+   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens)
+   - Create a token with these permissions:
+     - `Account` → `Workers Scripts` → `Edit`
+     - `Account` → `Account Settings` → `Read`
+     - `Account` → `Workers KV Storage` → `Edit` (if using KV)
+   - Copy the token
+
+2. **Add GitHub Secrets:**
+   - Go to your GitHub repo → Settings → Secrets and variables → Actions
+   - Add two secrets:
+     - `CLOUDFLARE_API_TOKEN` - Your API token from step 1
+     - `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID (found in Workers dashboard URL or account settings)
+
+3. **Deploy:**
+   - Push or merge to `main` branch
+   - GitHub Actions will automatically deploy to Cloudflare Workers
+   - Check the Actions tab for deployment status
+
+**Alternative:** Use [Cloudflare Workers Builds](https://developers.cloudflare.com/pages/configuration/builds/) to connect your GitHub repo directly via the Cloudflare dashboard (zero GitHub Actions configuration).
+
 ## How It Works
 
 ### Creating a Mock
