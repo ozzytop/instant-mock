@@ -536,6 +536,87 @@ const HTML_PAGE = `<!DOCTYPE html>
     .endpoint-line:hover .endpoint-copy-icon {
       opacity: 1;
     }
+    .endpoint-container {
+      margin: 6px 0;
+    }
+    .endpoint-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      font-size: 0.8rem;
+    }
+    .endpoint-controls input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .endpoint-controls textarea {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      min-height: 50px;
+      resize: vertical;
+    }
+    .execute-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .execute-btn:hover {
+      background: #5568d3;
+    }
+    .execute-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .endpoint-result {
+      margin-top: 6px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 4px solid #667eea;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .endpoint-result.success {
+      border-left-color: #28a745;
+      background: #d4edda;
+    }
+    .endpoint-result.error {
+      border-left-color: #dc3545;
+      background: #f8d7da;
+    }
+    .result-status {
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #495057;
+    }
+    .result-body {
+      background: white;
+      padding: 8px;
+      border-radius: 3px;
+      max-height: 200px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
   </style>
 </head>
 <body>
@@ -662,16 +743,134 @@ const HTML_PAGE = `<!DOCTYPE html>
 
     function createEndpointLine(method, url, description) {
       const id = 'endpoint_' + Math.random().toString(36).substr(2, 9);
+      const hasId = url.includes('/:id') || url.match(/\/[^\/]+$/)?.[0]?.match(/\/\d+$|\/[a-z]+-\d+$/);
+      const needsBody = method === 'POST' || method === 'PATCH';
+      
+      let controlsHTML = '';
+      if (hasId || needsBody) {
+        controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '" style="display:none;">';
+        
+        if (hasId) {
+          const currentId = url.match(/\/([^\/]+)$/)?.[1] || '1';
+          controlsHTML += '<input type="text" id="id_' + id + '" placeholder="ID" value="' + currentId + '" />';
+        }
+        
+        if (needsBody) {
+          const defaultBody = method === 'POST' 
+            ? '{"name": "New Item"}' 
+            : '{"name": "Updated"}';
+          controlsHTML += '<textarea id="body_' + id + '" placeholder="Request body (JSON)">' + defaultBody + '</textarea>';
+        }
+        
+        controlsHTML += '</div>';
+      }
+      
       return \`
-        <div class="endpoint-line" onclick="copyEndpoint('\${url}', '\${id}')">
-          <span class="endpoint-method method-\${method}">\${method}</span>
-          <span class="endpoint-url">\${url}</span>
-          <span class="endpoint-copy-icon" id="\${id}">📋</span>
+        <div class="endpoint-container">
+          <div class="endpoint-line">
+            <span class="endpoint-method method-\${method}">\${method}</span>
+            <span class="endpoint-url" onclick="copyEndpoint('\${url}', '\${id}')">\${url}</span>
+            <span class="endpoint-copy-icon" id="\${id}" onclick="copyEndpoint('\${url}', '\${id}')">📋</span>
+            <button class="execute-btn" onclick="executeEndpoint('\${method}', '\${url}', '\${id}', \${hasId}, \${needsBody})">▶ Run</button>
+          </div>
+          \${controlsHTML}
+          <div id="result_\${id}" class="endpoint-result" style="display:none;"></div>
         </div>
       \`;
     }
 
+    async function executeEndpoint(method, baseUrl, id, hasId, needsBody) {
+      const resultDiv = document.getElementById('result_' + id);
+      const executeBtn = event.target;
+      
+      executeBtn.disabled = true;
+      executeBtn.textContent = '⏳ Running...';
+      resultDiv.style.display = 'none';
+      
+      try {
+        let url = baseUrl;
+        
+        // Replace :id or use custom ID
+        if (hasId) {
+          const controlsDiv = document.getElementById('controls_' + id);
+          if (!controlsDiv || controlsDiv.style.display === 'none') {
+            // Show controls on first click
+            if (controlsDiv) controlsDiv.style.display = 'flex';
+            executeBtn.disabled = false;
+            executeBtn.textContent = '▶ Run';
+            return;
+          }
+          
+          const idInput = document.getElementById('id_' + id);
+          const customId = idInput ? idInput.value : '';
+          if (url.includes('/:id')) {
+            url = url.replace('/:id', '/' + customId);
+          } else {
+            url = url.replace(/\/[^\/]+$/, '/' + customId);
+          }
+        }
+        
+        const options = {
+          method: method,
+          headers: {}
+        };
+        
+        // Add body for POST/PATCH
+        if (needsBody) {
+          const controlsDiv = document.getElementById('controls_' + id);
+          if (!controlsDiv || controlsDiv.style.display === 'none') {
+            // Show controls on first click
+            if (controlsDiv) controlsDiv.style.display = 'flex';
+            executeBtn.disabled = false;
+            executeBtn.textContent = '▶ Run';
+            return;
+          }
+          
+          const bodyInput = document.getElementById('body_' + id);
+          if (bodyInput && bodyInput.value) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = bodyInput.value;
+          }
+        }
+        
+        const startTime = Date.now();
+        const response = await fetch(url, options);
+        const elapsed = Date.now() - startTime;
+        
+        let responseBody;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseBody = await response.json();
+          responseBody = JSON.stringify(responseBody, null, 2);
+        } else {
+          responseBody = await response.text();
+        }
+        
+        const statusClass = response.ok ? 'success' : 'error';
+        resultDiv.className = 'endpoint-result ' + statusClass;
+        resultDiv.innerHTML = \`
+          <div class="result-status">
+            \${response.status} \${response.statusText} · \${elapsed}ms
+          </div>
+          <div class="result-body">\${responseBody || '(empty response)'}</div>
+        \`;
+        resultDiv.style.display = 'block';
+        
+      } catch (error) {
+        resultDiv.className = 'endpoint-result error';
+        resultDiv.innerHTML = \`
+          <div class="result-status">Network Error</div>
+          <div class="result-body">\${error.message}</div>
+        \`;
+        resultDiv.style.display = 'block';
+      } finally {
+        executeBtn.disabled = false;
+        executeBtn.textContent = '▶ Run';
+      }
+    }
+
     function copyEndpoint(url, iconId) {
+      event.stopPropagation(); // Prevent bubbling
       const icon = document.getElementById(iconId);
       navigator.clipboard.writeText(url).then(() => {
         icon.textContent = '✓';
