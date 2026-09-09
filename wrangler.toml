@@ -1,0 +1,13 @@
+name = "instant-mock"
+main = "src/index.ts"
+compatibility_date = "2024-09-09"
+
+[[kv_namespaces]]
+binding = "MOCKS"
+id = "placeholder_will_be_generated_on_deploy"
+preview_id = "placeholder_for_local_dev"
+
+[env.production]
+kv_namespaces = [
+  { binding = "MOCKS", id = "placeholder_will_be_generated_on_deploy" }
+]
