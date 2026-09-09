@@ -43,7 +43,7 @@ An instant mock API service for frontend developers who need a fake backend in ~
 
 3. **Create KV namespace:**
    ```bash
-   wrangler kv:namespace create MOCKS
+   npx wrangler kv namespace create MOCKS
    ```
    
    This will output something like:
