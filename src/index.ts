@@ -860,7 +860,7 @@ const HTML_PAGE = `<!DOCTYPE html>
 
     function createEndpointLine(method, url, description) {
       const id = 'endpoint_' + Math.random().toString(36).substr(2, 9);
-      const hasId = url.includes('/:id') || url.match(/\/[^\/]+$/)?.[0]?.match(/\/\d+$|\/[a-z]+-\d+$/);
+      const hasId = url.includes('/:id') || url.match(/\\/[^\\/]+$/)?.[0]?.match(/\\/\\d+$|\\/[a-z]+-\\d+$/);
       const needsBody = method === 'POST' || method === 'PATCH';
       
       let controlsHTML = '';
@@ -868,7 +868,7 @@ const HTML_PAGE = `<!DOCTYPE html>
         controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '" style="display:none;">';
         
         if (hasId) {
-          const currentId = url.match(/\/([^\/]+)$/)?.[1] || '1';
+          const currentId = url.match(/\\/([^\\/]+)$/)?.[1] || '1';
           controlsHTML += '<div><label for="id_' + id + '">ID:</label><input type="text" id="id_' + id + '" placeholder="Enter ID" value="' + currentId + '" /></div>';
         }
         
@@ -923,7 +923,7 @@ const HTML_PAGE = `<!DOCTYPE html>
           if (url.includes('/:id')) {
             url = url.replace('/:id', '/' + customId);
           } else {
-            url = url.replace(/\/[^\/]+$/, '/' + customId);
+            url = url.replace(/\\/[^\\/]+$/, '/' + customId);
           }
         }
         
