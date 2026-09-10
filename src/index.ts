@@ -860,7 +860,24 @@ const HTML_PAGE = `<!DOCTYPE html>
 
     function createEndpointLine(method, url, description) {
       const id = 'endpoint_' + Math.random().toString(36).substr(2, 9);
-      const hasId = url.includes('/:id') || url.match(/\\/[^\\/]+$/)?.[0]?.match(/\\/\\d+$|\\/[a-z]+-\\d+$/);
+      
+      // Check if URL has :id placeholder or ends with a numeric/ID-like segment
+      function hasIdInUrl(u) {
+        if (u.includes('/:id')) return true;
+        const lastSlash = u.lastIndexOf('/');
+        if (lastSlash === -1) return false;
+        const segment = u.substring(lastSlash + 1);
+        // Check if segment is all digits or matches pattern like "user-123"
+        if (segment && !isNaN(segment)) return true;
+        const dashIndex = segment.indexOf('-');
+        if (dashIndex > 0 && dashIndex < segment.length - 1) {
+          const afterDash = segment.substring(dashIndex + 1);
+          return afterDash && !isNaN(afterDash);
+        }
+        return false;
+      }
+      
+      const hasId = hasIdInUrl(url);
       const needsBody = method === 'POST' || method === 'PATCH';
       
       let controlsHTML = '';
@@ -868,7 +885,8 @@ const HTML_PAGE = `<!DOCTYPE html>
         controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '">';
         
         if (hasId) {
-          const currentId = url.match(/\\/([^\\/]+)$/)?.[1] || '1';
+          const lastSlash = url.lastIndexOf('/');
+          const currentId = lastSlash !== -1 ? url.substring(lastSlash + 1) : '1';
           controlsHTML += '<div><label for="id_' + id + '">ID:</label><input type="text" id="id_' + id + '" placeholder="Enter ID" value="' + currentId + '" /></div>';
         }
         
@@ -914,7 +932,8 @@ const HTML_PAGE = `<!DOCTYPE html>
           if (url.includes('/:id')) {
             url = url.replace('/:id', '/' + customId);
           } else {
-            url = url.replace(/\\/[^\\/]+$/, '/' + customId);
+            const lastSlash = url.lastIndexOf('/');
+            url = lastSlash !== -1 ? url.substring(0, lastSlash + 1) + customId : url;
           }
         }
         
