@@ -865,7 +865,7 @@ const HTML_PAGE = `<!DOCTYPE html>
       
       let controlsHTML = '';
       if (hasId || needsBody) {
-        controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '" style="display:none;">';
+        controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '">';
         
         if (hasId) {
           const currentId = url.match(/\\/([^\\/]+)$/)?.[1] || '1';
@@ -909,15 +909,6 @@ const HTML_PAGE = `<!DOCTYPE html>
         
         // Replace :id or use custom ID
         if (hasId) {
-          const controlsDiv = document.getElementById('controls_' + id);
-          if (!controlsDiv || controlsDiv.style.display === 'none') {
-            // Show controls on first click
-            if (controlsDiv) controlsDiv.style.display = 'flex';
-            executeBtn.disabled = false;
-            executeBtn.textContent = '▶ Run';
-            return;
-          }
-          
           const idInput = document.getElementById('id_' + id);
           const customId = idInput ? idInput.value : '';
           if (url.includes('/:id')) {
@@ -934,15 +925,6 @@ const HTML_PAGE = `<!DOCTYPE html>
         
         // Add body for POST/PATCH
         if (needsBody) {
-          const controlsDiv = document.getElementById('controls_' + id);
-          if (!controlsDiv || controlsDiv.style.display === 'none') {
-            // Show controls on first click
-            if (controlsDiv) controlsDiv.style.display = 'flex';
-            executeBtn.disabled = false;
-            executeBtn.textContent = '▶ Run';
-            return;
-          }
-          
           const bodyInput = document.getElementById('body_' + id);
           if (bodyInput && bodyInput.value) {
             options.headers['Content-Type'] = 'application/json';
