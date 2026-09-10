@@ -383,239 +383,356 @@ const HTML_PAGE = `<!DOCTYPE html>
     }
     .container {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      max-width: 800px;
+      max-width: 900px;
       width: 100%;
-      padding: 40px;
+      padding: 48px;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px;
+        border-radius: 12px;
+      }
     }
     h1 {
-      color: #333;
-      margin-bottom: 10px;
-      font-size: 2rem;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.75rem;
+      }
     }
     .tagline {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 1.1rem;
+      color: #6b7280;
+      margin-bottom: 32px;
+      font-size: 1.125rem;
+      line-height: 1.5;
     }
     textarea {
       width: 100%;
-      height: 300px;
-      padding: 15px;
-      border: 2px solid #e0e0e0;
+      height: 280px;
+      padding: 16px;
+      border: 2px solid #e5e7eb;
       border-radius: 8px;
       font-family: "Monaco", "Courier New", monospace;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1.5;
       resize: vertical;
       margin-bottom: 20px;
+      transition: border-color 0.2s;
     }
     textarea:focus {
       outline: none;
       border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
-      padding: 15px 40px;
+      padding: 16px 48px;
       border-radius: 8px;
-      font-size: 1.1rem;
+      font-size: 1.125rem;
       font-weight: 600;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      button {
+        width: auto;
+      }
     }
     button:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(0);
     }
     button:disabled {
-      opacity: 0.6;
+      opacity: 0.7;
       cursor: not-allowed;
     }
     .result {
-      margin-top: 20px;
-      padding: 20px;
-      background: #f5f5f5;
-      border-radius: 8px;
+      margin-top: 32px;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 12px;
       display: none;
     }
     .result.show { display: block; }
-    .result.success { background: #d4edda; border-left: 4px solid #28a745; }
-    .result.error { background: #f8d7da; border-left: 4px solid #dc3545; }
+    .result.success { 
+      background: #ecfdf5; 
+      border: 2px solid #10b981;
+    }
+    .result.error { 
+      background: #fef2f2; 
+      border: 2px solid #ef4444;
+    }
+    .result > strong {
+      display: block;
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
     .url-box {
       background: white;
-      padding: 15px;
-      border-radius: 6px;
+      padding: 16px;
+      border-radius: 8px;
       font-family: monospace;
       word-break: break-all;
-      margin: 10px 0;
-      border: 1px solid #ddd;
+      margin: 16px 0;
+      border: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      color: #374151;
     }
     .copy-btn {
-      background: #28a745;
-      padding: 8px 20px;
-      font-size: 0.9rem;
-      margin-top: 10px;
+      background: #10b981;
+      padding: 10px 24px;
+      font-size: 0.95rem;
+      margin-top: 12px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .copy-btn:hover {
+      background: #059669;
     }
     .examples {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 2px solid #e5e7eb;
     }
     .examples h3 {
-      color: #555;
-      margin-bottom: 10px;
-      font-size: 1rem;
+      color: #374151;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
     }
     .example-btn {
-      background: #6c757d;
+      background: #6b7280;
       padding: 8px 16px;
       font-size: 0.85rem;
-      margin: 5px 5px 5px 0;
+      margin: 6px 6px 0 0;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .example-btn:hover {
+      background: #4b5563;
     }
     .info {
-      background: #e7f3ff;
-      border-left: 4px solid #2196F3;
-      padding: 15px;
-      margin-top: 20px;
-      border-radius: 4px;
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      margin-top: 24px;
+      border-radius: 8px;
       font-size: 0.9rem;
-      color: #555;
+      color: #1e40af;
+      line-height: 1.6;
     }
     .endpoints {
-      margin-top: 15px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+    }
+    .endpoints > strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+      color: #1a1a1a;
     }
     .endpoint-group {
-      margin-bottom: 20px;
+      margin-bottom: 28px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
     }
     .endpoint-group h4 {
-      color: #444;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
+      color: #1a1a1a;
+      font-size: 1rem;
+      margin-bottom: 12px;
       font-weight: 600;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .endpoint-container {
+      margin: 10px 0;
     }
     .endpoint-line {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin: 6px 0;
-      padding: 8px 12px;
-      background: white;
-      border-radius: 4px;
-      border: 1px solid #ddd;
+      gap: 10px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
       font-family: monospace;
       font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+    }
+    @media (max-width: 768px) {
+      .endpoint-line {
+        flex-wrap: wrap;
+      }
     }
     .endpoint-line:hover {
-      background: #f8f9fa;
+      background: #f3f4f6;
+      border-color: #d1d5db;
     }
     .endpoint-method {
-      font-weight: bold;
-      min-width: 55px;
-      padding: 2px 6px;
-      border-radius: 3px;
+      font-weight: 700;
+      min-width: 60px;
+      padding: 4px 8px;
+      border-radius: 4px;
       font-size: 0.75rem;
+      text-align: center;
+      flex-shrink: 0;
     }
-    .method-GET { color: #28a745; background: #d4edda; }
-    .method-POST { color: #007bff; background: #cfe2ff; }
-    .method-PATCH { color: #ffc107; background: #fff3cd; }
-    .method-DELETE { color: #dc3545; background: #f8d7da; }
+    .method-GET { color: #047857; background: #d1fae5; }
+    .method-POST { color: #1e40af; background: #dbeafe; }
+    .method-PATCH { color: #d97706; background: #fef3c7; }
+    .method-DELETE { color: #dc2626; background: #fee2e2; }
     .endpoint-url {
       flex: 1;
-      color: #495057;
+      color: #374151;
       word-break: break-all;
+      min-width: 0;
+    }
+    @media (max-width: 768px) {
+      .endpoint-url {
+        flex-basis: 100%;
+        order: 3;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+      }
     }
     .endpoint-copy-icon {
-      font-size: 1rem;
-      opacity: 0.5;
+      font-size: 1.1rem;
+      opacity: 0.4;
       transition: opacity 0.2s;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
     }
-    .endpoint-line:hover .endpoint-copy-icon {
+    .endpoint-copy-icon:hover {
       opacity: 1;
-    }
-    .endpoint-container {
-      margin: 6px 0;
-    }
-    .endpoint-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      padding: 8px 12px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #e0e0e0;
-      font-size: 0.8rem;
-    }
-    .endpoint-controls input {
-      flex: 1;
-      padding: 4px 8px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      font-family: monospace;
-      font-size: 0.8rem;
-    }
-    .endpoint-controls textarea {
-      flex: 1;
-      padding: 4px 8px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      min-height: 50px;
-      resize: vertical;
     }
     .execute-btn {
       background: #667eea;
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 0.8rem;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      flex-shrink: 0;
     }
-    .execute-btn:hover {
+    .execute-btn:hover:not(:disabled) {
       background: #5568d3;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .execute-btn:active:not(:disabled) {
+      transform: scale(0.98);
     }
     .execute-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.6;
       cursor: not-allowed;
     }
-    .endpoint-result {
-      margin-top: 6px;
+    .endpoint-controls {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      margin-top: 8px;
       padding: 12px;
-      background: #f8f9fa;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 768px) {
+      .endpoint-controls {
+        flex-direction: column;
+      }
+    }
+    .endpoint-controls label {
+      display: block;
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .endpoint-controls input,
+    .endpoint-controls textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
       border-radius: 4px;
-      border-left: 4px solid #667eea;
       font-family: monospace;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+    }
+    .endpoint-controls input:focus,
+    .endpoint-controls textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .endpoint-controls textarea {
+      min-height: 60px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+    .endpoint-controls > div {
+      flex: 1;
+      min-width: 0;
+    }
+    .endpoint-result {
+      margin-top: 8px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border-left: 4px solid #6b7280;
+      font-family: monospace;
+      font-size: 0.85rem;
     }
     .endpoint-result.success {
-      border-left-color: #28a745;
-      background: #d4edda;
+      border-left-color: #10b981;
+      background: #ecfdf5;
     }
     .endpoint-result.error {
-      border-left-color: #dc3545;
-      background: #f8d7da;
+      border-left-color: #ef4444;
+      background: #fef2f2;
     }
     .result-status {
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: #495057;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .result-body {
       background: white;
-      padding: 8px;
-      border-radius: 3px;
-      max-height: 200px;
+      padding: 10px;
+      border-radius: 4px;
+      max-height: 240px;
       overflow: auto;
       white-space: pre-wrap;
       word-break: break-word;
+      line-height: 1.5;
+      font-size: 0.8rem;
+      color: #374151;
+      border: 1px solid #e5e7eb;
     }
   </style>
 </head>
@@ -743,7 +860,7 @@ const HTML_PAGE = `<!DOCTYPE html>
 
     function createEndpointLine(method, url, description) {
       const id = 'endpoint_' + Math.random().toString(36).substr(2, 9);
-      const hasId = url.includes('/:id') || url.match(/\/[^\/]+$/)?.[0]?.match(/\/\d+$|\/[a-z]+-\d+$/);
+      const hasId = url.includes('/:id') || url.match(/\\/[^\\/]+$/)?.[0]?.match(/\\/\\d+$|\\/[a-z]+-\\d+$/);
       const needsBody = method === 'POST' || method === 'PATCH';
       
       let controlsHTML = '';
@@ -751,15 +868,15 @@ const HTML_PAGE = `<!DOCTYPE html>
         controlsHTML = '<div class="endpoint-controls" id="controls_' + id + '" style="display:none;">';
         
         if (hasId) {
-          const currentId = url.match(/\/([^\/]+)$/)?.[1] || '1';
-          controlsHTML += '<input type="text" id="id_' + id + '" placeholder="ID" value="' + currentId + '" />';
+          const currentId = url.match(/\\/([^\\/]+)$/)?.[1] || '1';
+          controlsHTML += '<div><label for="id_' + id + '">ID:</label><input type="text" id="id_' + id + '" placeholder="Enter ID" value="' + currentId + '" /></div>';
         }
         
         if (needsBody) {
           const defaultBody = method === 'POST' 
             ? '{"name": "New Item"}' 
             : '{"name": "Updated"}';
-          controlsHTML += '<textarea id="body_' + id + '" placeholder="Request body (JSON)">' + defaultBody + '</textarea>';
+          controlsHTML += '<div><label for="body_' + id + '">Request Body (JSON):</label><textarea id="body_' + id + '" placeholder="JSON request body">' + defaultBody + '</textarea></div>';
         }
         
         controlsHTML += '</div>';
@@ -769,9 +886,9 @@ const HTML_PAGE = `<!DOCTYPE html>
         <div class="endpoint-container">
           <div class="endpoint-line">
             <span class="endpoint-method method-\${method}">\${method}</span>
-            <span class="endpoint-url" onclick="copyEndpoint('\${url}', '\${id}')">\${url}</span>
-            <span class="endpoint-copy-icon" id="\${id}" onclick="copyEndpoint('\${url}', '\${id}')">📋</span>
-            <button class="execute-btn" onclick="executeEndpoint('\${method}', '\${url}', '\${id}', \${hasId}, \${needsBody})">▶ Run</button>
+            <span class="endpoint-url" onclick="copyEndpoint('\${url}', '\${id}')" title="Click to copy">\${url}</span>
+            <span class="endpoint-copy-icon" id="\${id}" onclick="copyEndpoint('\${url}', '\${id}')" title="Copy URL">📋</span>
+            <button class="execute-btn" onclick="executeEndpoint('\${method}', '\${url}', '\${id}', \${hasId}, \${needsBody})" title="Execute this endpoint">▶ Run</button>
           </div>
           \${controlsHTML}
           <div id="result_\${id}" class="endpoint-result" style="display:none;"></div>
@@ -806,7 +923,7 @@ const HTML_PAGE = `<!DOCTYPE html>
           if (url.includes('/:id')) {
             url = url.replace('/:id', '/' + customId);
           } else {
-            url = url.replace(/\/[^\/]+$/, '/' + customId);
+            url = url.replace(/\\/[^\\/]+$/, '/' + customId);
           }
         }
         
@@ -915,12 +1032,12 @@ const HTML_PAGE = `<!DOCTYPE html>
         resultDiv.innerHTML = \`
           <strong>✅ Mock API created!</strong>
           <div class="url-box">\${data.url}</div>
-          <button id="copyUrlBtn" class="copy-btn" onclick="copyUrl('\${data.url}', 'copyUrlBtn')">Copy URL</button>
-          <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
-            Expires: \${new Date(data.expiresAt).toLocaleString()}
+          <button id="copyUrlBtn" class="copy-btn" onclick="copyUrl('\${data.url}', 'copyUrlBtn')">📋 Copy URL</button>
+          <p style="margin-top: 16px; color: #6b7280; font-size: 0.9rem;">
+            ⏰ Expires: \${new Date(data.expiresAt).toLocaleString()}
           </p>
-          <div style="margin-top: 15px;">
-            <strong style="color: #444; font-size: 0.95rem;">📡 Available Endpoints:</strong>
+          <div class="endpoints">
+            <strong>📡 Available Endpoints</strong>
             \${endpointsHTML}
           </div>
         \`;
