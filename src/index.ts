@@ -575,6 +575,7 @@ const HTML_PAGE = `<!DOCTYPE html>
       font-family: monospace;
       font-size: 0.85rem;
       transition: all 0.2s;
+      cursor: pointer;
     }
     @media (max-width: 768px) {
       .endpoint-line {
@@ -584,6 +585,15 @@ const HTML_PAGE = `<!DOCTYPE html>
     .endpoint-line:hover {
       background: #f3f4f6;
       border-color: #d1d5db;
+    }
+    .endpoint-chevron {
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .endpoint-container.expanded .endpoint-chevron {
+      transform: rotate(90deg);
     }
     .endpoint-method {
       font-weight: 700;
@@ -620,6 +630,10 @@ const HTML_PAGE = `<!DOCTYPE html>
       cursor: pointer;
       padding: 4px;
       flex-shrink: 0;
+      display: none;
+    }
+    .endpoint-container.expanded .endpoint-copy-icon {
+      display: block;
     }
     .endpoint-copy-icon:hover {
       opacity: 1;
@@ -636,6 +650,10 @@ const HTML_PAGE = `<!DOCTYPE html>
       white-space: nowrap;
       transition: all 0.2s;
       flex-shrink: 0;
+      display: none;
+    }
+    .endpoint-container.expanded .execute-btn {
+      display: block;
     }
     .execute-btn:hover:not(:disabled) {
       background: #5568d3;
@@ -649,7 +667,7 @@ const HTML_PAGE = `<!DOCTYPE html>
       cursor: not-allowed;
     }
     .endpoint-controls {
-      display: flex;
+      display: none;
       align-items: stretch;
       gap: 8px;
       margin-top: 8px;
@@ -658,6 +676,9 @@ const HTML_PAGE = `<!DOCTYPE html>
       border-radius: 6px;
       border: 1px solid #e5e7eb;
       font-size: 0.85rem;
+    }
+    .endpoint-container.expanded .endpoint-controls {
+      display: flex;
     }
     @media (max-width: 768px) {
       .endpoint-controls {
@@ -697,6 +718,7 @@ const HTML_PAGE = `<!DOCTYPE html>
       min-width: 0;
     }
     .endpoint-result {
+      display: none;
       margin-top: 8px;
       padding: 12px;
       background: #f9fafb;
@@ -704,6 +726,9 @@ const HTML_PAGE = `<!DOCTYPE html>
       border-left: 4px solid #6b7280;
       font-family: monospace;
       font-size: 0.85rem;
+    }
+    .endpoint-container.expanded .endpoint-result {
+      display: block;
     }
     .endpoint-result.success {
       border-left-color: #10b981;
@@ -901,26 +926,40 @@ const HTML_PAGE = `<!DOCTYPE html>
       }
       
       return \`
-        <div class="endpoint-container">
-          <div class="endpoint-line">
+        <div class="endpoint-container" id="container_\${id}">
+          <div class="endpoint-line" onclick="toggleEndpoint('\${id}')">
+            <span class="endpoint-chevron">▶</span>
             <span class="endpoint-method method-\${method}">\${method}</span>
-            <span class="endpoint-url" onclick="copyEndpoint('\${url}', '\${id}')" title="Click to copy">\${url}</span>
-            <span class="endpoint-copy-icon" id="\${id}" onclick="copyEndpoint('\${url}', '\${id}')" title="Copy URL">📋</span>
-            <button class="execute-btn" onclick="executeEndpoint('\${method}', '\${url}', '\${id}', \${hasId}, \${needsBody})" title="Execute this endpoint">▶ Run</button>
+            <span class="endpoint-url">\${url}</span>
+            <span class="endpoint-copy-icon" id="\${id}" onclick="copyEndpoint('\${url}', '\${id}'); event.stopPropagation();" title="Copy URL">📋</span>
+            <button class="execute-btn" onclick="executeEndpoint('\${method}', '\${url}', '\${id}', \${hasId}, \${needsBody}); event.stopPropagation();" title="Execute this endpoint">▶ Run</button>
           </div>
           \${controlsHTML}
-          <div id="result_\${id}" class="endpoint-result" style="display:none;"></div>
+          <div id="result_\${id}" class="endpoint-result"></div>
         </div>
       \`;
     }
 
+    function toggleEndpoint(id) {
+      const container = document.getElementById('container_' + id);
+      if (container) {
+        container.classList.toggle('expanded');
+      }
+    }
+
     async function executeEndpoint(method, baseUrl, id, hasId, needsBody) {
       const resultDiv = document.getElementById('result_' + id);
+      const container = document.getElementById('container_' + id);
       const executeBtn = event.target;
+      
+      // Ensure endpoint is expanded when running
+      if (container && !container.classList.contains('expanded')) {
+        container.classList.add('expanded');
+      }
       
       executeBtn.disabled = true;
       executeBtn.textContent = '⏳ Running...';
-      resultDiv.style.display = 'none';
+      resultDiv.className = 'endpoint-result';
       
       try {
         let url = baseUrl;
@@ -972,7 +1011,6 @@ const HTML_PAGE = `<!DOCTYPE html>
           </div>
           <div class="result-body">\${responseBody || '(empty response)'}</div>
         \`;
-        resultDiv.style.display = 'block';
         
       } catch (error) {
         resultDiv.className = 'endpoint-result error';
@@ -980,7 +1018,6 @@ const HTML_PAGE = `<!DOCTYPE html>
           <div class="result-status">Network Error</div>
           <div class="result-body">\${error.message}</div>
         \`;
-        resultDiv.style.display = 'block';
       } finally {
         executeBtn.disabled = false;
         executeBtn.textContent = '▶ Run';
